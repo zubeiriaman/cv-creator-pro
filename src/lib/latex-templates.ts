@@ -2,10 +2,16 @@ import { CVFormData, TemplateName } from './cv-types';
 
 function escapeLatex(str: string): string {
   return str
+    .replace(/\\/g, '\\textbackslash{}')
     .replace(/&/g, '\\&')
     .replace(/%/g, '\\%')
     .replace(/#/g, '\\#')
-    .replace(/_/g, '\\_');
+    .replace(/_/g, '\\_')
+    .replace(/\$/g, '\\$')
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}')
+    .replace(/~/g, '\\textasciitilde{}')
+    .replace(/\^/g, '\\textasciicircum{}');
 }
 
 function safeParts(entry: string): [string, string, string] {
@@ -13,67 +19,123 @@ function safeParts(entry: string): [string, string, string] {
   return [parts[0] || 'Position', parts[1] || 'Organization', parts[2] || 'Date'];
 }
 
+function bulletItems(text: string): string {
+  return text
+    .split('\n')
+    .map(a => a.trim())
+    .filter(Boolean)
+    .map(a => `  \\item ${escapeLatex(a.replace(/^•\s*/, ''))}`)
+    .join('\n');
+}
+
 const templates: Record<TemplateName, (data: CVFormData) => string> = {
-  classic: (data) => `\\documentclass[10pt,a4paper]{article}
+
+  // ═══════════════════════════════════════════════
+  // CLASSIC — Clean single-column, blue accents, comprehensive sections
+  // ═══════════════════════════════════════════════
+  classic: (data) => {
+    const expBlocks = data.experience.map(exp => {
+      const [pos, comp, date] = safeParts(exp);
+      return `\\textbf{${escapeLatex(pos)}} \\hfill ${escapeLatex(date)}\\\\
+\\textit{${escapeLatex(comp)}}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.experienceDetails.map(d => `  \\item ${escapeLatex(d.replace(/^•\s*/, ''))}`).join('\n')}
+\\end{itemize}`;
+    }).join('\n\\vspace{6pt}\n');
+
+    const eduBlocks = data.education.map(edu => {
+      const [deg, inst, yr] = safeParts(edu);
+      return `\\textbf{${escapeLatex(deg)}} \\hfill ${escapeLatex(yr)}\\\\
+${escapeLatex(inst)}`;
+    }).join('\n\\vspace{4pt}\n');
+
+    return `\\documentclass[10pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[margin=0.6in]{geometry}
 \\usepackage{enumitem}
 \\usepackage{hyperref}
 \\usepackage{titlesec}
 \\usepackage{xcolor}
+\\usepackage{multicol}
 
 \\definecolor{bffblue}{RGB}{0,102,204}
 \\definecolor{darkblue}{RGB}{0,51,102}
 
 \\hypersetup{colorlinks=true, linkcolor=darkblue, urlcolor=bffblue}
 \\pagestyle{empty}
+\\setlength{\\parindent}{0pt}
 
 \\titleformat{\\section}{\\normalsize\\bfseries\\color{bffblue}}{}{0em}{}[\\titlerule]
-\\titlespacing{\\section}{0pt}{8pt}{4pt}
+\\titlespacing{\\section}{0pt}{10pt}{5pt}
 
 \\begin{document}
 
 \\begin{center}
 {\\Large \\textbf{${escapeLatex(data.name)}}}\\\\[4pt]
-{\\large \\textbf{${escapeLatex(data.title)}}}\\\\[4pt]
-${escapeLatex(data.phone)} \\quad 
-\\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\quad 
-${escapeLatex(data.location)}
+{\\large \\textbf{${escapeLatex(data.title)} --- Communications \\& Sports Media Professional}}\\\\[6pt]
+{\\small ${escapeLatex(data.phone)} \\quad \\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\quad ${escapeLatex(data.location)}}\\\\[2pt]
+{\\small \\href{https://${data.portfolio}}{${escapeLatex(data.portfolio)}}}
 \\end{center}
 
 \\section*{Professional Summary}
 ${escapeLatex(data.summary)}
 
-\\section*{Professional Experience}
-${data.experience.map(exp => {
-    const [pos, comp, date] = safeParts(exp);
-    return `\\textbf{${escapeLatex(pos)}} \\hfill ${escapeLatex(date)}\\\\
-\\textit{${escapeLatex(comp)}}\\\\
-\\begin{itemize}[noitemsep]
-${data.experienceDetails.slice(0,3).map(d => `    \\item ${escapeLatex(d.replace('•','').trim())}`).join('\n')}
-\\end{itemize}\n`;
-}).join('\n')}
+\\section*{Football Background \\& Engagement}
+${escapeLatex(data.football)}
 
-\\section*{Education}
-${data.education.map(edu => {
-    const [deg, inst, yr] = safeParts(edu);
-    return `\\textbf{${escapeLatex(deg)}} \\hfill ${escapeLatex(yr)}\\\\
-${escapeLatex(inst)}\n`;
-}).join('\\\\[4pt]\n')}
-
-\\section*{Key Achievements}
-\\begin{itemize}[noitemsep]
-${data.achievements.split('\n').map(a => a.trim() ? `    \\item ${escapeLatex(a.replace('•','').trim())}` : '').filter(Boolean).join('\n')}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${bulletItems(data.achievements)}
 \\end{itemize}
 
-\\section*{Skills}
-${escapeLatex(data.skills)}
+\\section*{Core Competencies}
+\\begin{multicols}{2}
+\\small
+\\textbf{Content \\& Journalism}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.skills.split(',').slice(0, 3).map(s => `  \\item ${escapeLatex(s.trim())}`).join('\n')}
+\\end{itemize}
 
-\\end{document}`,
+\\columnbreak
 
-  modern: (data) => `\\documentclass[10pt,a4paper]{article}
+\\textbf{Media \\& Digital Management}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.skills.split(',').slice(3).map(s => `  \\item ${escapeLatex(s.trim())}`).join('\n')}
+\\end{itemize}
+\\end{multicols}
+
+\\section*{Professional Experience}
+${expBlocks}
+
+\\section*{Education}
+${eduBlocks}
+
+\\end{document}`;
+  },
+
+  // ═══════════════════════════════════════════════
+  // MODERN TWO-COLUMN — Name at top, two-column body
+  // ═══════════════════════════════════════════════
+  modern: (data) => {
+    const expBlocks = data.experience.map(exp => {
+      const [pos, comp, date] = safeParts(exp);
+      return `\\textbf{${escapeLatex(pos)}} \\\\
+\\textit{${escapeLatex(date)}} \\\\
+\\textcolor{primaryblue}{\\textbf{${escapeLatex(comp)}}}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.experienceDetails.map(d => `  \\item ${escapeLatex(d.replace(/^•\s*/, ''))}`).join('\n')}
+\\end{itemize}`;
+    }).join('\n\\vspace{6pt}\n');
+
+    const eduBlocks = data.education.map(edu => {
+      const [deg, inst, yr] = safeParts(edu);
+      return `\\textbf{${escapeLatex(deg)}} \\\\
+\\textit{${escapeLatex(yr)}} \\\\
+${escapeLatex(inst)}`;
+    }).join('\n\\vspace{6pt}\n');
+
+    return `\\documentclass[10pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
-\\usepackage[margin=0.8in]{geometry}
+\\usepackage[margin=0.7in]{geometry}
 \\usepackage{xcolor}
 \\usepackage{enumitem}
 \\usepackage{titlesec}
@@ -84,60 +146,82 @@ ${escapeLatex(data.skills)}
 \\definecolor{darkblue}{RGB}{0,51,102}
 
 \\pagestyle{empty}
+\\setlength{\\parindent}{0pt}
 \\hypersetup{colorlinks=true, linkcolor=darkblue, urlcolor=primaryblue}
 
 \\titleformat{\\section}{\\large\\bfseries\\color{primaryblue}}{}{0pt}{\\MakeUppercase}[\\titlerule]
+\\titlespacing{\\section}{0pt}{10pt}{5pt}
 
 \\begin{document}
 
 \\begin{center}
-{\\Huge \\textbf{${escapeLatex(data.name.toUpperCase())}}} \\\\[4pt]
-{\\large \\textbf{${escapeLatex(data.title)}}}
+{\\Huge \\textbf{${escapeLatex(data.name.toUpperCase())}}}\\\\[4pt]
+{\\large ${escapeLatex(data.title)} | Communications \\& Sports Media Professional}\\\\[6pt]
+{\\small ${escapeLatex(data.phone)} \\quad \\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\\\
+${escapeLatex(data.location)} \\quad \\href{https://${data.portfolio}}{${escapeLatex(data.portfolio)}}}
 \\end{center}
 
-\\vspace{0.2cm}
-
-{\\small
-${escapeLatex(data.phone)} \\quad 
-\\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\quad 
-${escapeLatex(data.location)}
-}
-
-\\vspace{0.5cm}
+\\vspace{0.3cm}
 
 \\begin{multicols}{2}
+
 \\section{Summary}
 ${escapeLatex(data.summary)}
 
+\\section{Key Achievements}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${bulletItems(data.achievements)}
+\\end{itemize}
+
 \\section{Experience}
-${data.experience.map(exp => {
-    const [pos, comp, date] = safeParts(exp);
-    return `\\textbf{${escapeLatex(pos)}} \\hfill \\textit{${escapeLatex(date)}} \\\\
-\\textcolor{primaryblue}{\\textbf{${escapeLatex(comp)}}}\n`;
-}).join('\n\n')}
+${expBlocks}
 
 \\columnbreak
 
-\\section{Education}
-${data.education.map(edu => {
-    const [deg, inst, yr] = safeParts(edu);
-    return `\\textbf{${escapeLatex(deg)}} \\\\
-\\textit{${escapeLatex(yr)}} \\\\
-${escapeLatex(inst)}\n`;
-}).join('\n\n')}
+\\section{Core Skills}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.skills.split(',').map(s => `  \\item ${escapeLatex(s.trim())}`).join('\n')}
+\\end{itemize}
 
-\\section{Skills}
-\\begin{itemize}[noitemsep]
-${data.skills.split(',').map(s => `    \\item ${escapeLatex(s.trim())}`).join('\n')}
+\\section{Education}
+${eduBlocks}
+
+\\section{Football Background}
+${escapeLatex(data.football)}
+
+\\section{Languages}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+  \\item English: Professional/Fluent
+  \\item Bangla: Native
 \\end{itemize}
 
 \\end{multicols}
 
-\\end{document}`,
+\\end{document}`;
+  },
 
-  detailed: (data) => `\\documentclass[10pt,a4paper]{article}
+  // ═══════════════════════════════════════════════
+  // DETAILED MODERN — Two-column, gray header, comprehensive
+  // ═══════════════════════════════════════════════
+  detailed: (data) => {
+    const expBlocks = data.experience.map(exp => {
+      const [pos, comp, date] = safeParts(exp);
+      return `\\textbf{${escapeLatex(comp)}}\\\\
+\\textit{${escapeLatex(pos)}} \\hfill ${escapeLatex(date)}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.experienceDetails.map(d => `  \\item ${escapeLatex(d.replace(/^•\s*/, ''))}`).join('\n')}
+\\end{itemize}`;
+    }).join('\n\\vspace{6pt}\n');
+
+    const eduBlocks = data.education.map(edu => {
+      const [deg, inst, yr] = safeParts(edu);
+      return `\\textbf{${escapeLatex(deg)}} \\hfill ${escapeLatex(yr)}\\\\
+${escapeLatex(inst)}`;
+    }).join('\n\\vspace{4pt}\n');
+
+    return `\\documentclass[10pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
-\\usepackage[margin=0.65in]{geometry}
+\\usepackage[margin=0.6in]{geometry}
 \\usepackage{xcolor}
 \\usepackage{enumitem}
 \\usepackage{titlesec}
@@ -145,55 +229,88 @@ ${data.skills.split(',').map(s => `    \\item ${escapeLatex(s.trim())}`).join('\
 \\usepackage{hyperref}
 
 \\definecolor{headercolor}{RGB}{69,90,100}
+\\definecolor{accentblue}{RGB}{0,102,204}
 
 \\pagestyle{empty}
+\\setlength{\\parindent}{0pt}
+\\hypersetup{colorlinks=true, linkcolor=headercolor, urlcolor=accentblue}
 
 \\titleformat{\\section}{\\small\\bfseries\\color{headercolor}\\MakeUppercase}{}{0pt}{}[\\vspace{-2pt}\\textcolor{headercolor}{\\rule{\\linewidth}{0.6pt}}]
+\\titlespacing{\\section}{0pt}{8pt}{4pt}
 
 \\begin{document}
 
 \\begin{center}
 {\\LARGE \\textbf{${escapeLatex(data.name.toUpperCase())}}}\\\\[4pt]
-{\\Large \\textbf{${escapeLatex(data.title.toUpperCase())}}}
+{\\Large \\textbf{\\textcolor{headercolor}{${escapeLatex(data.title.toUpperCase())}}}}\\\\[2pt]
+{\\normalsize Communications \\& Sports Media Professional}
 \\end{center}
+
+\\vspace{0.3cm}
 
 \\begin{multicols}{2}
 
 \\section{Contact}
 \\textbf{Phone:} ${escapeLatex(data.phone)} \\\\
 \\textbf{Email:} \\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\\\
+\\textbf{Portfolio:} \\href{https://${data.portfolio}}{${escapeLatex(data.portfolio)}} \\\\
 \\textbf{Location:} ${escapeLatex(data.location)}
 
-\\section{Summary}
+\\section{Professional Summary}
 ${escapeLatex(data.summary)}
 
 \\section{Education}
-${data.education.map(edu => {
-    const [deg, inst, yr] = safeParts(edu);
-    return `\\textbf{${escapeLatex(deg)}} \\\\
-${escapeLatex(inst)} \\hfill ${escapeLatex(yr)}`;
-}).join('\n\n')}
+${eduBlocks}
+
+\\section{Core Competencies}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.skills.split(',').map(s => `  \\item ${escapeLatex(s.trim())}`).join('\n')}
+\\end{itemize}
 
 \\columnbreak
 
-\\section{Experience}
-${data.experience.map(exp => {
-    const [pos, comp, date] = safeParts(exp);
-    return `\\textbf{${escapeLatex(pos)}} \\\\
-\\textit{${escapeLatex(comp)}} \\hfill ${escapeLatex(date)} \\\\[2pt]
-${data.experienceDetails.slice(0,2).map(d => escapeLatex(d.replace('•','').trim())).join('; ')}`;
-}).join('\n\n')}
+\\section{Professional Experience}
+${expBlocks}
+
+\\section{Key Achievements}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${bulletItems(data.achievements)}
+\\end{itemize}
+
+\\section{Football Background}
+${escapeLatex(data.football)}
+
+\\section{Languages}
+English: Fluent \\quad | \\quad Bangla: Native
 
 \\end{multicols}
 
-\\section{Achievements}
-${escapeLatex(data.achievements)}
+\\end{document}`;
+  },
 
-\\end{document}`,
+  // ═══════════════════════════════════════════════
+  // EXECUTIVE PRO V1 — Chelsea Blue header, 3-column skills, comprehensive
+  // ═══════════════════════════════════════════════
+  executive1: (data) => {
+    const expBlocks = data.experience.map(exp => {
+      const [pos, comp, date] = safeParts(exp);
+      return `\\textbf{${escapeLatex(pos)}} \\hfill \\small ${escapeLatex(date)}\\\\
+\\textit{${escapeLatex(comp)}}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.experienceDetails.map(d => `  \\item ${escapeLatex(d.replace(/^•\s*/, ''))}`).join('\n')}
+\\end{itemize}
+\\vspace{4pt}`;
+    }).join('\n');
 
-  executive1: (data) => `\\documentclass[10pt,a4paper]{article}
+    const eduBlocks = data.education.map(edu => {
+      const [deg, inst, yr] = safeParts(edu);
+      return `\\textbf{${escapeLatex(deg)}} \\hfill ${escapeLatex(yr)}\\\\
+${escapeLatex(inst)}`;
+    }).join('\n\\vspace{4pt}\n');
+
+    return `\\documentclass[10pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
-\\usepackage[margin=0.7in]{geometry}
+\\usepackage[margin=0.65in]{geometry}
 \\usepackage{xcolor}
 \\usepackage{hyperref}
 \\usepackage{titlesec}
@@ -205,82 +322,94 @@ ${escapeLatex(data.achievements)}
 \\definecolor{darkgray}{RGB}{50,50,50}
 
 \\hypersetup{colorlinks=true, urlcolor=chelseabluelight, linkcolor=chelseabluelight}
-
 \\pagestyle{empty}
 \\setlength{\\parindent}{0pt}
 
 \\titleformat{\\section}{\\large\\bfseries\\color{chelseablue}\\MakeUppercase}{}{0em}{}[\\vspace{2pt}\\color{chelseablue}\\rule{\\linewidth}{1.4pt}]
+\\titlespacing{\\section}{0pt}{10pt}{5pt}
 
 \\begin{document}
 
 \\begin{center}
 {\\Huge\\bfseries ${escapeLatex(data.name.toUpperCase())}}\\\\[4pt]
 {\\LARGE\\bfseries\\textcolor{chelseablue}{${escapeLatex(data.title.toUpperCase())}}}\\\\[4pt]
-{\\normalsize Communications \\& Sports Media Professional}
+{\\normalsize Communications \\& Sports Media Professional}\\\\[8pt]
+{\\small ${escapeLatex(data.phone)} \\quad \\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\quad ${escapeLatex(data.location)}}\\\\[2pt]
+{\\small \\href{https://${data.portfolio}}{${escapeLatex(data.portfolio)}}}
 \\end{center}
-
-\\vspace{8pt}
-
-{\\small
-${escapeLatex(data.phone)} \\quad
-\\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\quad
-${escapeLatex(data.location)}
-}
 
 \\section{Professional Summary}
 ${escapeLatex(data.summary)}
 
-\\section{Key Strengths}
+\\section{Key Strengths \\& Skills}
 \\begin{multicols}{3}
 \\small
-\\textbf{Core Skills}
-\\begin{itemize}[noitemsep]
-\\item Strategic Communications
-\\item Content Creation
-\\item Media Management
+\\textbf{Content \\& Journalism}
+\\begin{itemize}[noitemsep, leftmargin=1em]
+  \\item Sports Writing \\& Analysis
+  \\item Press Releases \\& Articles
+  \\item Editing \\& Proofreading
+  \\item Digital Journalism
 \\end{itemize}
 
 \\columnbreak
 
-\\textbf{Digital}
-\\begin{itemize}[noitemsep]
-\\item Social Media Strategy
-\\item Community Building
-\\item Brand Communications
+\\textbf{Media \\& Digital}
+\\begin{itemize}[noitemsep, leftmargin=1em]
+  \\item Social Media Strategy
+  \\item Sports Event Organisation
+  \\item Media Coordination
+  \\item Brand Communications
+  \\item Community Building
 \\end{itemize}
 
 \\columnbreak
 
 \\textbf{Professional}
-\\begin{itemize}[noitemsep]
-\\item Stakeholder Management
-\\item Event Organization
-\\item English/Bangla
+\\begin{itemize}[noitemsep, leftmargin=1em]
+  \\item Stakeholder Management
+  \\item Event Organisation
+  \\item English (Fluent)
+  \\item Bangla (Native)
 \\end{itemize}
 \\end{multicols}
 
 \\section{Professional Experience}
-${data.experience.map(exp => {
-    const [pos, comp, date] = safeParts(exp);
-    return `\\textbf{${escapeLatex(pos)}} \\hfill \\small ${escapeLatex(date)}\\\\
-\\textit{${escapeLatex(comp)}}
-\\begin{itemize}[noitemsep]
-${data.experienceDetails.slice(0,3).map(d => `  \\item ${escapeLatex(d.replace('•','').trim())}`).join('\n')}
+${expBlocks}
+
+\\section{Football Background \\& Community Leadership}
+${escapeLatex(data.football)}
+
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${bulletItems(data.achievements)}
 \\end{itemize}
 
-\\vspace{4pt}`;
-}).join('')}
-
 \\section{Education}
-${data.education.map(edu => {
-    const [deg, inst, yr] = safeParts(edu);
-    return `\\textbf{${escapeLatex(deg)}} \\hfill ${escapeLatex(yr)}\\\\
-${escapeLatex(inst)}`;
-}).join('\n\n')}
+${eduBlocks}
 
-\\end{document}`,
+\\end{document}`;
+  },
 
-  executive2: (data) => `\\documentclass[10pt,a4paper]{article}
+  // ═══════════════════════════════════════════════
+  // EXECUTIVE PRO V2 — Grayscale, compact, professional
+  // ═══════════════════════════════════════════════
+  executive2: (data) => {
+    const expBlocks = data.experience.map(exp => {
+      const [pos, comp, date] = safeParts(exp);
+      return `\\textbf{\\small ${escapeLatex(comp)}} \\hfill {\\scriptsize\\color{headergray} \\textbf{${escapeLatex(date)}}}\\\\
+\\textit{\\small ${escapeLatex(pos)}}
+\\begin{itemize}[noitemsep, leftmargin=1.5em]
+${data.experienceDetails.map(d => `  \\item {\\small ${escapeLatex(d.replace(/^•\s*/, ''))}}`).join('\n')}
+\\end{itemize}`;
+    }).join('\n\\vspace{6pt}\n');
+
+    const eduBlocks = data.education.map(edu => {
+      const [deg, inst, yr] = safeParts(edu);
+      return `\\textbf{\\small ${escapeLatex(deg)}} \\hfill {\\tiny\\color{headergray} \\textbf{${escapeLatex(yr)}}}\\\\
+{\\footnotesize ${escapeLatex(inst)}}`;
+    }).join('\n\\vspace{4pt}\n');
+
+    return `\\documentclass[10pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[margin=0.5in]{geometry}
 \\usepackage{enumitem}
@@ -294,47 +423,67 @@ ${escapeLatex(inst)}`;
 
 \\hypersetup{colorlinks=true, linkcolor=darkgray, urlcolor=darkgray}
 \\pagestyle{empty}
+\\setlength{\\parindent}{0pt}
 
 \\titleformat{\\section}{\\small\\bfseries\\color{darkgray}\\uppercase}{}{0em}{}[\\vspace{-0.5em}\\textcolor{lightgray}{\\rule{\\linewidth}{0.4pt}}]
+\\titlespacing{\\section}{0pt}{8pt}{4pt}
 
 \\setlist[itemize]{nosep, leftmargin=1em}
 
 \\begin{document}
 
-\\noindent
-{\\LARGE\\bfseries\\color{darkgray} ${escapeLatex(data.name.toUpperCase())}}\\\\[2pt]
-{\\normalsize\\color{headergray} ${escapeLatex(data.title)} --- Communications \\& Sports Media Professional}\\\\[2pt]
+{\\LARGE\\bfseries\\color{darkgray} ${escapeLatex(data.name.toUpperCase())}}\\\\[3pt]
+{\\normalsize\\color{headergray} ${escapeLatex(data.title)} --- Communications \\& Sports Media Professional}\\\\[3pt]
 {\\small\\color{headergray} 
 ${escapeLatex(data.phone)} \\quad 
-\\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\quad 
+\\href{mailto:${data.email}}{${escapeLatex(data.email)}} \\quad
+\\href{https://${data.portfolio}}{${escapeLatex(data.portfolio)}} \\quad
 ${escapeLatex(data.location)}}
 
-\\vspace{4pt}
+\\vspace{6pt}
 
 \\section{Summary}
 ${escapeLatex(data.summary)}
 
+\\section{Football Background \\& Engagement}
+${escapeLatex(data.football)}
+
+\\begin{itemize}[noitemsep]
+${bulletItems(data.achievements)}
+\\end{itemize}
+
+\\section{Core Competencies}
+\\begin{multicols}{2}
+\\small
+\\textbf{Content \\& Journalism}
+\\begin{itemize}[noitemsep]
+${data.skills.split(',').slice(0, 3).map(s => `  \\item ${escapeLatex(s.trim())}`).join('\n')}
+\\end{itemize}
+
+\\columnbreak
+
+\\textbf{Media \\& Digital Management}
+\\begin{itemize}[noitemsep]
+${data.skills.split(',').slice(3).map(s => `  \\item ${escapeLatex(s.trim())}`).join('\n')}
+\\end{itemize}
+\\end{multicols}
+
 \\section{Experience}
-${data.experience.map(exp => {
-    const [pos, comp, date] = safeParts(exp);
-    return `\\textbf{\\small ${escapeLatex(comp)}} \\hfill {\\scriptsize\\color{headergray} \\textbf{${escapeLatex(date)}}}\\\\
-\\textit{\\small ${escapeLatex(pos)}}\\\\[2pt]
-${data.experienceDetails.slice(0,4).map(d => escapeLatex(d.replace('•','').trim())).join('; ')}`;
-}).join('\n\n')}
+${expBlocks}
 
 \\begin{multicols}{2}
 \\section{Education}
-${data.education.map(edu => {
-    const [deg, inst, yr] = safeParts(edu);
-    return `\\textbf{\\small ${escapeLatex(deg)}} \\hfill {\\tiny\\color{headergray} \\textbf{${escapeLatex(yr)}}}\\\\
-{\\footnotesize ${escapeLatex(inst)}}`;
-}).join('\n\n')}
+${eduBlocks}
 
-\\section{Achievements}
-${data.achievements.split('\n').slice(0,4).map(a => a.trim() ? `\\textbullet\\ ${escapeLatex(a.replace('•','').trim())}` : '').filter(Boolean).join('\n\n')}
+\\columnbreak
+
+\\section{Languages}
+English: Professional/Fluent \\\\
+Bangla: Native
 \\end{multicols}
 
-\\end{document}`
+\\end{document}`;
+  },
 };
 
 export function generateLatex(template: TemplateName, data: CVFormData): string {
