@@ -3,7 +3,7 @@ import TemplateSelector from '@/components/cv/TemplateSelector';
 import CVForm from '@/components/cv/CVForm';
 import PreviewPanel from '@/components/cv/PreviewPanel';
 import { CVFormData, TemplateName, defaultFormData } from '@/lib/cv-types';
-import { generateLatex } from '@/lib/latex-templates';
+import { generateLatex } from '@/lib/templates';
 import { FileText } from 'lucide-react';
 
 const Index = () => {
