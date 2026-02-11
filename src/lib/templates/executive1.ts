@@ -1,5 +1,5 @@
 import { CVFormData } from '../cv-types';
-import { escapeLatex } from './utils';
+import { escapeLatex, bulletItems, renderCustomSections, renderReferences } from './utils';
 
 export function executive1Template(data: CVFormData): string {
   const e = escapeLatex;
@@ -75,7 +75,6 @@ ${exp.details.map(d => `  \\item ${e(d)}`).join('\n')}
   \\faPhone\\ ${e(data.phone)} \\quad
   \\faEnvelope\\ \\href{mailto:${data.email}}{${e(data.email)}} \\quad
   \\faMapMarker*\\ ${e(data.location)} \\\\[3pt]
-  \\faYoutube\\ \\href{https://www.${data.social}}{YouTube Portfolio} \\quad
   \\faGlobe\\ \\href{https://www.${data.portfolio}}{${e(data.portfolio)}}
 \\end{minipage}%
 \\hfill
@@ -92,60 +91,16 @@ ${exp.details.map(d => `  \\item ${e(d)}`).join('\n')}
 
 \\vspace{10pt}
 
-% ==============================================
-%               PROFESSIONAL SUMMARY
-% ==============================================
-
 \\section{${e(data.sectionHeadings.summary)}}
 \\RaggedRight
 ${e(data.summary)}
 
 \\vspace{8pt}
 
-% ==============================================
-%               KEY STRENGTHS / SKILLS
-% ==============================================
-
-\\section{Key Strengths \\& Skills}
-
-\\begin{multicols}{3}
-\\small
-\\textbf{Content \\& Journalism}
-\\begin{itemize}
-  \\item Sports writing \\& match analysis
-  \\item Press releases \\& news articles
-  \\item Editing \\& proofreading
-  \\item Digital journalism
-\\end{itemize}
-
-\\columnbreak
-
-\\textbf{Media \\& Digital}
-\\begin{itemize}
-  \\item Social media strategy \\& management
-  \\item Sports event organisation
-  \\item Media coordination
-  \\item Brand communications
-  \\item Community building
-\\end{itemize}
-
-\\columnbreak
-
-\\textbf{Professional}
-\\begin{itemize}
-  \\item Stakeholder management
-  \\item Archive \\& records management
-  \\item High-pressure environments
-  \\item Flexible availability
-  \\item English (fluent) • Bangla (native)
-\\end{itemize}
-\\end{multicols}
+\\section{${e(data.sectionHeadings.skills)}}
+${e(data.skills)}
 
 \\vspace{8pt}
-
-% ==============================================
-%               PROFESSIONAL EXPERIENCE
-% ==============================================
 
 \\section{${e(data.sectionHeadings.experience)}}
 
@@ -153,44 +108,10 @@ ${expBlocks}
 
 \\vspace{8pt}
 
-% ==============================================
-%               FOOTBALL & COMMUNITY
-% ==============================================
-
 \\section{${e(data.sectionHeadings.football)}}
-
-\\textbf{Professional FIFA Esports}
-\\begin{itemize}
-  \\item Winner -- AIUB Inter FIFA Competition
-  \\item 4× Champion -- FIFA Pro Club Bangladesh
-  \\item Delivered training sessions for aspiring players
-\\end{itemize}
-
-\\textbf{TV \\& Media Appearances}
-\\begin{itemize}
-  \\item Featured football analyst on Bangladeshi sports television
-  \\item \\faYoutube\\ \\href{https://www.youtube.com/watch?v=J5GwZosQgq0&list=PLqxFDwhgZcjwpNRIiwumEuEh8ieyKrX7y}{YouTube Portfolio}
-\\end{itemize}
-
-\\textbf{Community \\& Page Management}
-\\begin{itemize}
-  \\item Administrator -- Chelsea Fans Supporters of Bangladesh official page
-  \\item Administrator -- Football Lovers Club Bangladesh page
-  \\item Created regular content, match updates, graphics and fan engagement
-  \\item Designed logos and branding materials for clubs and tournaments
-\\end{itemize}
-
-\\textbf{Stadium Experience}
-\\begin{itemize}
-  \\item Stamford Bridge -- Chelsea vs Benfica
-  \\item Emirates Stadium -- Brazil vs Senegal
-\\end{itemize}
+${e(data.football)}
 
 \\vspace{8pt}
-
-% ==============================================
-%               EDUCATION + PORTFOLIO + REFERENCES
-% ==============================================
 
 \\section{${e(data.sectionHeadings.education)}}
 
@@ -201,31 +122,35 @@ ${e(edu.institution)}`;
 
 \\vspace{6pt}
 
-\\section{Portfolio}
+\\section{${e(data.sectionHeadings.achievements)}}
+\\begin{itemize}
+${bulletItems(data.achievements)}
+\\end{itemize}
 
-\\faYoutube\\ \\href{https://www.youtube.com/watch?v=J5GwZosQgq0&list=PLqxFDwhgZcjwpNRIiwumEuEh8ieyKrX7y}{YouTube -- TV Appearances \\& Analysis}\\\\
-\\faGlobe\\ \\href{https://www.${data.portfolio}}{Behance -- Design \\& Branding Work}
+\\vspace{6pt}
+
+\\section{${e(data.sectionHeadings.portfolio)}}
+\\begin{itemize}
+${bulletItems(data.portfolioContent)}
+\\end{itemize}
+
+\\vspace{6pt}
+
+\\section{${e(data.sectionHeadings.personalAttributes)}}
+${e(data.personalAttributes)}
+
+\\vspace{6pt}
+
+\\section{${e(data.sectionHeadings.languages)}}
+${e(data.languages)}
 
 \\vspace{8pt}
 
-% References
-\\section{References}
+\\section{${e(data.sectionHeadings.references)}}
 
-\\begin{minipage}[t]{0.48\\textwidth}
-  \\small
-  \\textbf{Syed Nur Ur Rahman} \\\\
-  \\textit{Senior Manager -- foodpanda Bangladesh} \\\\[3pt]
-  \\textcolor{chelseabluelight}{\\faPhone}\\ +880\\,1751\\,045011 \\\\[1pt]
-  \\textcolor{chelseabluelight}{\\faEnvelope}\\ \\href{mailto:syed.nur@foodpanda.com.bd}{syed.nur@foodpanda.com.bd}
-\\end{minipage}%
-\\hfill
-\\begin{minipage}[t]{0.48\\textwidth}
-  \\small
-  \\textbf{Md. Anamul Hoque} \\\\
-  \\textit{Assistant Professor -- East West University} \\\\[3pt]
-  \\textcolor{chelseabluelight}{\\faPhone}\\ +880\\,1962\\,265092 \\\\[1pt]
-  \\textcolor{chelseabluelight}{\\faEnvelope}\\ \\href{mailto:a.hoque@ewubd.edu}{a.hoque@ewubd.edu}
-\\end{minipage}
+${renderReferences(data)}
+
+${renderCustomSections(data, '\\section')}
 
 \\end{document}`;
 }

@@ -1,5 +1,5 @@
-import { CVFormData, ExperienceEntry, EducationEntry } from '@/lib/cv-types';
-import { Plus, X } from 'lucide-react';
+import { CVFormData, ExperienceEntry, EducationEntry, CustomSection } from '@/lib/cv-types';
+import { Plus, X, GripVertical } from 'lucide-react';
 
 interface CVFormProps {
   data: CVFormData;
@@ -17,11 +17,13 @@ const inputClass = "w-full rounded-md border border-border bg-background px-3 py
 const textareaClass = inputClass + " min-h-[60px] resize-y";
 const smallInputClass = "w-full rounded-md border border-border bg-background px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors";
 
+type HeadingKey = keyof CVFormData['sectionHeadings'];
+
 const CVForm = ({ data, onChange }: CVFormProps) => {
   const set = <K extends keyof CVFormData>(key: K, value: CVFormData[K]) =>
     onChange({ ...data, [key]: value });
 
-  const setHeading = (key: keyof CVFormData['sectionHeadings'], value: string) =>
+  const setHeading = (key: HeadingKey, value: string) =>
     onChange({ ...data, sectionHeadings: { ...data.sectionHeadings, [key]: value } });
 
   const addExperience = () => {
@@ -52,8 +54,23 @@ const CVForm = ({ data, onChange }: CVFormProps) => {
     set('education', data.education.filter((_, i) => i !== idx));
   };
 
+  const addCustomSection = () => {
+    set('customSections', [...data.customSections, { heading: 'New Section', content: '' }]);
+  };
+
+  const updateCustomSection = (idx: number, field: keyof CustomSection, val: string) => {
+    const arr = [...data.customSections];
+    arr[idx] = { ...arr[idx], [field]: val };
+    set('customSections', arr);
+  };
+
+  const removeCustomSection = (idx: number) => {
+    set('customSections', data.customSections.filter((_, i) => i !== idx));
+  };
+
   return (
     <div className="space-y-4">
+      {/* Personal Info */}
       <Section title={data.sectionHeadings.personalInfo} headingKey="personalInfo" onHeadingChange={setHeading}>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Full Name *">
@@ -87,10 +104,12 @@ const CVForm = ({ data, onChange }: CVFormProps) => {
         </div>
       </Section>
 
+      {/* Summary */}
       <Section title={data.sectionHeadings.summary} headingKey="summary" onHeadingChange={setHeading}>
         <textarea className={textareaClass} rows={3} value={data.summary} onChange={e => set('summary', e.target.value)} />
       </Section>
 
+      {/* Experience */}
       <Section title={data.sectionHeadings.experience} headingKey="experience" onHeadingChange={setHeading}>
         {data.experience.map((exp, idx) => (
           <div key={idx} className="mb-4 rounded-md border border-border/50 bg-background/50 p-3">
@@ -126,11 +145,12 @@ const CVForm = ({ data, onChange }: CVFormProps) => {
             </Field>
           </div>
         ))}
-        <button onClick={addExperience} className="flex items-center gap-1 rounded-md bg-success/20 px-3 py-1.5 text-xs font-medium text-success hover:bg-success/30 transition-colors">
+        <button onClick={addExperience} className="flex items-center gap-1 rounded-md bg-primary/20 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/30 transition-colors">
           <Plus size={12} /> Add Experience
         </button>
       </Section>
 
+      {/* Education */}
       <Section title={data.sectionHeadings.education} headingKey="education" onHeadingChange={setHeading}>
         {data.education.map((edu, idx) => (
           <div key={idx} className="mb-4 rounded-md border border-border/50 bg-background/50 p-3">
@@ -159,35 +179,91 @@ const CVForm = ({ data, onChange }: CVFormProps) => {
             </Field>
           </div>
         ))}
-        <button onClick={addEducation} className="flex items-center gap-1 rounded-md bg-success/20 px-3 py-1.5 text-xs font-medium text-success hover:bg-success/30 transition-colors">
+        <button onClick={addEducation} className="flex items-center gap-1 rounded-md bg-primary/20 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/30 transition-colors">
           <Plus size={12} /> Add Education
         </button>
       </Section>
 
+      {/* Skills */}
+      <Section title={data.sectionHeadings.skills} headingKey="skills" onHeadingChange={setHeading}>
+        <textarea className={textareaClass} rows={2} value={data.skills} onChange={e => set('skills', e.target.value)} />
+      </Section>
+
+      {/* Football / Sports */}
       <Section title={data.sectionHeadings.football} headingKey="football" onHeadingChange={setHeading}>
         <textarea className={textareaClass} rows={2} value={data.football} onChange={e => set('football', e.target.value)} />
       </Section>
 
+      {/* Achievements */}
       <Section title={data.sectionHeadings.achievements} headingKey="achievements" onHeadingChange={setHeading}>
         <textarea className={textareaClass} rows={3} value={data.achievements} onChange={e => set('achievements', e.target.value)} />
       </Section>
 
-      <Section title={data.sectionHeadings.skills} headingKey="skills" onHeadingChange={setHeading}>
-        <textarea className={textareaClass} rows={2} value={data.skills} onChange={e => set('skills', e.target.value)} />
+      {/* Portfolio */}
+      <Section title={data.sectionHeadings.portfolio} headingKey="portfolio" onHeadingChange={setHeading}>
+        <textarea className={textareaClass} rows={3} value={data.portfolioContent} onChange={e => set('portfolioContent', e.target.value)} />
       </Section>
+
+      {/* Personal Attributes */}
+      <Section title={data.sectionHeadings.personalAttributes} headingKey="personalAttributes" onHeadingChange={setHeading}>
+        <textarea className={textareaClass} rows={2} value={data.personalAttributes} onChange={e => set('personalAttributes', e.target.value)} />
+      </Section>
+
+      {/* Languages */}
+      <Section title={data.sectionHeadings.languages} headingKey="languages" onHeadingChange={setHeading}>
+        <input className={inputClass} value={data.languages} onChange={e => set('languages', e.target.value)} placeholder="English (Native), French (Conversational)" />
+      </Section>
+
+      {/* References */}
+      <Section title={data.sectionHeadings.references} headingKey="references" onHeadingChange={setHeading}>
+        <textarea className={textareaClass} rows={4} value={data.references} onChange={e => set('references', e.target.value)} placeholder="Name, Title, Contact info (separate references with a blank line)" />
+      </Section>
+
+      {/* Custom Sections */}
+      {data.customSections.map((section, idx) => (
+        <div key={idx} className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <GripVertical size={14} className="text-muted-foreground" />
+            <input
+              className="flex-1 border-b border-transparent bg-transparent text-sm font-semibold text-primary focus:border-primary focus:outline-none transition-colors"
+              value={section.heading}
+              onChange={e => updateCustomSection(idx, 'heading', e.target.value)}
+              placeholder="Section Heading"
+            />
+            <button onClick={() => removeCustomSection(idx)} className="rounded-md bg-destructive/20 px-2 py-0.5 text-destructive hover:bg-destructive/30 transition-colors">
+              <X size={12} />
+            </button>
+          </div>
+          <textarea
+            className={textareaClass}
+            rows={3}
+            value={section.content}
+            onChange={e => updateCustomSection(idx, 'content', e.target.value)}
+            placeholder="Section content..."
+          />
+        </div>
+      ))}
+
+      {/* Add Custom Section Button */}
+      <button
+        onClick={addCustomSection}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+      >
+        <Plus size={16} /> Add Custom Section
+      </button>
     </div>
   );
 };
 
-const Section = ({ 
-  title, 
-  headingKey, 
-  onHeadingChange, 
-  children 
-}: { 
-  title: string; 
-  headingKey: keyof CVFormData['sectionHeadings'];
-  onHeadingChange: (key: keyof CVFormData['sectionHeadings'], value: string) => void;
+const Section = ({
+  title,
+  headingKey,
+  onHeadingChange,
+  children,
+}: {
+  title: string;
+  headingKey: HeadingKey;
+  onHeadingChange: (key: HeadingKey, value: string) => void;
   children: React.ReactNode;
 }) => (
   <div className="rounded-lg border border-border bg-card p-4">

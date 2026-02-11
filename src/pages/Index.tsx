@@ -11,19 +11,12 @@ const Index = () => {
   const [template, setTemplate] = useState<TemplateName>('classic');
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
-  const [status, setStatus] = useState<{ type: 'idle' | 'compiling' | 'success' | 'error'; message: string }>({
-    type: 'idle',
-    message: '💡 Fill in your details and click "Generate & Compile PDF"',
-  });
 
   const handleCompile = useCallback(async () => {
     setIsCompiling(true);
-    setStatus({ type: 'compiling', message: '⏳ Generating LaTeX code...' });
 
     try {
       const code = generateLatex(template, formData);
-
-      setStatus({ type: 'compiling', message: '⏳ Compiling via LaTeX Online API...' });
 
       const response = await fetch('https://latex.ytotech.com/builds/sync', {
         method: 'POST',
@@ -35,7 +28,7 @@ const Index = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Compilation failed (HTTP ${response.status})`);
+        throw new Error(`PDF generation failed`);
       }
 
       const contentType = response.headers.get('content-type');
@@ -44,14 +37,11 @@ const Index = () => {
         const url = URL.createObjectURL(blob);
         if (pdfUrl) URL.revokeObjectURL(pdfUrl);
         setPdfUrl(url);
-        setStatus({ type: 'success', message: '✅ PDF compiled successfully!' });
       } else {
-        const text = await response.text();
-        throw new Error(text || 'Compilation returned non-PDF response');
+        throw new Error('Could not generate PDF. Please check your inputs.');
       }
     } catch (error: any) {
       console.error(error);
-      setStatus({ type: 'error', message: `❌ ${error.message}` });
     } finally {
       setIsCompiling(false);
     }
@@ -73,8 +63,8 @@ const Index = () => {
             <FileText size={20} className="text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">LaTeX CV Generator</h1>
-            <p className="text-xs text-muted-foreground">Generate & preview professional CVs with real-time LaTeX compilation</p>
+            <h1 className="text-xl font-bold text-foreground">Quick CV</h1>
+            <p className="text-xs text-muted-foreground">Generate professional CVs in seconds</p>
           </div>
         </div>
       </header>
@@ -91,7 +81,6 @@ const Index = () => {
         <div className="p-5" style={{ maxHeight: 'calc(100vh - 80px)', overflow: 'hidden' }}>
           <PreviewPanel
             isCompiling={isCompiling}
-            status={status}
             pdfUrl={pdfUrl}
             onCompile={handleCompile}
             onDownloadPDF={handleDownloadPDF}
