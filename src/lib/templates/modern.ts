@@ -1,5 +1,5 @@
 import { CVFormData } from '../cv-types';
-import { escapeLatex, bulletItems } from './utils';
+import { escapeLatex, bulletItems, renderCustomSections, renderReferences } from './utils';
 
 export function modernTemplate(data: CVFormData): string {
   const e = escapeLatex;
@@ -84,44 +84,19 @@ ${e(data.summary)}
 
 ${expBlocks}
 
-\\section{\\texorpdfstring{\\faFutbol}{Football} ${e(data.sectionHeadings.football)}}
-\\begin{itemize}[leftmargin=*, noitemsep]
-    \\item \\textbf{TV Analyst:} Expert guest on Bangladeshi sports television. \\href{https://www.youtube.com/watch?v=J5GwZosQgq0&list=PLqxFDwhgZcjwpNRIiwumEuEh8ieyKrX7y}{\\faYoutube\\ Link}.
-    \\item \\textbf{Page Manager:} Managed \\textit{Chelsea Fans Supporters of Bangladesh} and \\textit{Football Lovers Club BD}.
-    \\item \\textbf{Stadium Experience:} Stamford Bridge (Chelsea vs Benfica) and Emirates Stadium (Brazil vs Senegal).
-\\end{itemize}
+\\section{\\texorpdfstring{\\faFutbol}{Sports} ${e(data.sectionHeadings.football)}}
+${e(data.football)}
 
 \\vfill\\null \\columnbreak % Switch to right column
 
 % --- RIGHT COLUMN ---
-\\section{\\texorpdfstring{\\faStar}{Key Achievements} ${e(data.sectionHeadings.achievements)}}
-
-\\begin{tcolorbox}[colback=white, colframe=primaryblue, arc=0mm, leftrule=3pt, rightrule=0pt, toprule=0pt, bottomrule=0pt, boxsep=1pt]
-    \\textbf{Professional FIFA Esports} \\\\
-    \\small \\textbf{Winner} - AIUB Inter FIFA Competition \\& \\textbf{4-Time Champion} - FIFA Pro Club Bangladesh.
-\\end{tcolorbox}
-
-\\begin{tcolorbox}[colback=white, colframe=primaryblue, arc=0mm, leftrule=3pt, rightrule=0pt, toprule=0pt, bottomrule=0pt, boxsep=1pt]
-    \\textbf{Broadcast Media Analyst} \\\\
-    \\small Featured analyst articulating complex tactics and match predictions for television audiences.
-\\end{tcolorbox}
-
-\\begin{tcolorbox}[colback=white, colframe=primaryblue, arc=0mm, leftrule=3pt, rightrule=0pt, toprule=0pt, bottomrule=0pt, boxsep=1pt]
-    \\textbf{Community Leadership} \\\\
-    \\small Cultivated football communities through consistent content and tactical discussion for 100k+ fans.
-\\end{tcolorbox}
+\\section{\\texorpdfstring{\\faStar}{Achievements} ${e(data.sectionHeadings.achievements)}}
+\\begin{itemize}[leftmargin=*, noitemsep]
+${bulletItems(data.achievements)}
+\\end{itemize}
 
 \\section{\\texorpdfstring{\\faTools}{Skills} ${e(data.sectionHeadings.skills)}}
-\\begin{itemize}[leftmargin=*, noitemsep]
-    \\item \\textbf{News \\& Content Writing}
-    \\item \\textbf{Editing \\& Press Releases}
-    \\item \\textbf{Sports Writing \\& Match Analysis}
-    \\item \\textbf{Social Media Management}
-    \\item \\textbf{Sports Event Management}
-    \\item \\textbf{Media Coordination \\& Archives}
-    \\item \\textbf{Football Industry Knowledge}
-    \\item \\textbf{Design Work (Behance)}
-\\end{itemize}
+${e(data.skills)}
 
 \\section{\\texorpdfstring{\\faGraduationCap}{Education} ${e(data.sectionHeadings.education)}}
 ${data.education.map(edu => {
@@ -130,22 +105,17 @@ ${data.education.map(edu => {
 ${e(edu.institution)}`;
 }).join('\n\n\\vspace{0.2cm}\n')}
 
-\\section{\\texorpdfstring{\\faAddressCard}{References} References}
+\\section{\\texorpdfstring{\\faUserCircle}{Attributes} ${e(data.sectionHeadings.personalAttributes)}}
+${e(data.personalAttributes)}
+
+\\section{\\texorpdfstring{\\faAddressCard}{References} ${e(data.sectionHeadings.references)}}
 \\small
-\\textbf{Syed Nur Ur Rahman} \\\\
-Senior Manager, foodpanda BD \\\\
-\\faPhone\\ +8801751045011
+${renderReferences(data)}
 
-\\vspace{0.2cm}
-\\textbf{Md. Anamul Hoque} \\\\
-Assistant Professor, EWU \\\\
-\\faPhone\\ +8801962265092
+\\section{\\texorpdfstring{\\faLanguage}{Languages} ${e(data.sectionHeadings.languages)}}
+${e(data.languages)}
 
-\\section{\\texorpdfstring{\\faLanguage}{Languages} Languages}
-\\begin{itemize}[leftmargin=*, noitemsep]
-    \\item \\textbf{English:} Professional/Fluent
-    \\item \\textbf{Bangla:} Native
-\\end{itemize}
+${renderCustomSections(data, '\\section')}
 
 \\end{multicols}
 

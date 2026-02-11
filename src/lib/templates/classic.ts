@@ -1,5 +1,5 @@
 import { CVFormData } from '../cv-types';
-import { escapeLatex, bulletItems } from './utils';
+import { escapeLatex, bulletItems, renderCustomSections, renderReferences } from './utils';
 
 export function classicTemplate(data: CVFormData): string {
   const e = escapeLatex;
@@ -56,71 +56,13 @@ ${e(edu.institution)}\\\\
 \\section*{\\faUser\\ ${e(data.sectionHeadings.summary)}}
 ${e(data.summary)}
 
-% Football Credentials
+% Football / Sports
 \\section*{\\faFutbol\\ ${e(data.sectionHeadings.football)}}
-
-\\subsection*{\\faTrophy\\ Professional FIFA Esports}
-\\textit{Competitive Player -- Championship Titles}
-\\begin{itemize}
-    \\item \\textbf{Winner -- AIUB Inter FIFA Competition} -- Defeated top university-level competitors in Bangladesh's premier academic esports tournament
-    \\item \\textbf{4-Time Champion -- FIFA Pro Club Bangladesh} -- Dominated professional competition, demonstrating elite tactical understanding
-    \\item Conducted \\textbf{training sessions} for aspiring esports players, developing curriculum on football tactics and gameplay strategies
-\\end{itemize}
-
-\\subsection*{\\faTv\\ Television \\& Media}
-\\textit{Featured Analyst -- On-Camera Commentary}
-\\begin{itemize}
-    \\item \\textbf{Featured guest on Bangladeshi sports television} providing expert football analysis -- \\faYoutube\\ \\href{https://www.youtube.com/watch?v=J5GwZosQgq0&list=PLqxFDwhgZcjwpNRIiwumEuEh8ieyKrX7y}{\\textbf{View on YouTube}}
-    \\item Articulated complex tactics, transfer analysis, and match predictions for television audiences
-\\end{itemize}
-
-\\subsection*{\\faUsers\\ Community Leadership \\& Page Management}
-\\textit{Administrator \\& Content Manager}
-\\begin{itemize}
-    \\item \\textbf{Managed Chelsea Fans Supporters of Bangladesh official page} -- Created and posted regular football content, match updates, player news, and graphics; grew engagement and fostered supporter community
-    \\item \\textbf{Managed Football Lovers Club Bangladesh page} -- Produced daily football content, tactical analysis, transfer news, and visual graphics for diverse football fanbase
-    \\item \\textbf{Former Administrator -- Chelsea FC Supporters Club Bangladesh} -- Led communications, \\textbf{news writing}, and fan engagement initiatives
-    \\item \\textbf{Core Member -- Premier Football Discussion Groups} (Bangladesh's largest) -- Engaged in tactical discussions and league coverage
-    \\item Coordinated match-day \\textbf{activities}, viewing parties, and fan discussions
-    \\item Created \\textbf{logos and branding materials} for football clubs and tournaments
-\\end{itemize}
-
-\\subsection*{\\faPlane\\ International Stadium Experience}
-\\begin{itemize}
-    \\item \\textbf{Stamford Bridge:} Chelsea vs Benfica -- Premier League atmosphere and media operations
-    \\item \\textbf{Emirates Stadium:} Brazil vs Senegal -- International friendly and event management insight
-\\end{itemize}
+${e(data.football)}
 
 % Core Competencies
 \\section*{\\faTools\\ ${e(data.sectionHeadings.skills)}}
-
-\\subsection*{Content \\& Journalism}
-\\begin{itemize}
-    \\item \\textbf{News Writing \\& Content Writing} -- Articles, match reports, digital content for social media pages and football communities
-    \\item \\textbf{Editing} -- Reviewed press releases, articles, and digital content for accuracy
-    \\item \\textbf{Sports Writing \\& Match Analysis} -- 16+ years producing tactical breakdowns and player analyses
-    \\item \\textbf{Press Releases \\& Official Statements} -- Corporate communications at foodpanda
-    \\item \\textbf{Digital Journalism} -- Real-time publication and rapid-response coverage
-\\end{itemize}
-
-\\subsection*{Media \\& Digital Management}
-\\begin{itemize}
-    \\item \\textbf{Social Media Management} -- Led content strategy for \\textbf{Chelsea Fans Supporters of Bangladesh} and \\textbf{Football Lovers Club Bangladesh} pages; daily publishing across \\textbf{social media platforms}
-    \\item \\textbf{Sports Event Management} -- Arranged foodpanda football tournament with full media coverage
-    \\item \\textbf{Media Coordination} -- Collaborated with photographers, videographers, and creative teams
-    \\item \\textbf{Archives} -- Maintained organized records of media releases and campaign materials
-    \\item \\textbf{Brand Communications} -- Maintained strict brand guidelines across all communications
-    \\item \\textbf{Community Engagement} -- Cultivated football communities through consistent content and interaction
-\\end{itemize}
-
-\\subsection*{Professional Skills}
-\\begin{itemize}
-    \\item \\textbf{Reporting} -- Accurate, deadline-driven coverage in high-pressure environments
-    \\item \\textbf{Assist \\& Support} -- Supported cross-functional teams and coordinated complex events
-    \\item \\textbf{Football Industry Knowledge} -- FIFA/AFC regulations, league structures, administration
-    \\item \\textbf{Operational Flexibility} -- Evenings, weekends, and travel for match coverage
-    \\item \\textbf{Languages:} English (fluent), Bangla (native)
-\\end{itemize}
+${e(data.skills)}
 
 % Experience
 \\section*{\\faBriefcase\\ ${e(data.sectionHeadings.experience)}}
@@ -139,36 +81,25 @@ ${bulletItems(data.achievements)}
 \\end{itemize}
 
 % Portfolio
-\\section*{\\faAddressBook\\ Portfolio}
+\\section*{\\faAddressBook\\ ${e(data.sectionHeadings.portfolio)}}
 \\begin{itemize}
-    \\item \\faYoutube\\ \\textbf{TV Appearances:} \\href{https://www.youtube.com/watch?v=J5GwZosQgq0&list=PLqxFDwhgZcjwpNRIiwumEuEh8ieyKrX7y}{\\textbf{YouTube Portfolio}}
-    \\item \\faBriefcase\\ \\textbf{Design Work:} \\href{https://www.${data.portfolio}}{\\textbf{${e(data.portfolio)}}}
-    \\item \\faPen\\ \\textbf{Writing Samples:} Match reports and tactical analyses available
-    \\item \\faGamepad\\ \\textbf{FIFA Credentials:} Competition history and training materials available
+${bulletItems(data.portfolioContent)}
 \\end{itemize}
 
 % Personal Attributes
-\\section*{\\faUserCircle\\ Personal Attributes}
-\\textbf{Dedicated Media Executive} with deep football knowledge. \\textbf{Responsible} for accurate \\textbf{content creation} and \\textbf{editing}. Proven ability to \\textbf{assist} teams while maintaining \\textbf{archives} and \\textbf{records}. Comfortable with \\textbf{government} protocols. Flexible for evenings, weekends, and travel.
+\\section*{\\faUserCircle\\ ${e(data.sectionHeadings.personalAttributes)}}
+${e(data.personalAttributes)}
+
+% Languages
+\\section*{\\faLanguage\\ ${e(data.sectionHeadings.languages)}}
+${e(data.languages)}
 
 % References
-\\section*{\\faAddressCard\\ References}
+\\section*{\\faAddressCard\\ ${e(data.sectionHeadings.references)}}
 
-\\begin{minipage}[t]{0.48\\textwidth}
-\\small
-\\textbf{Syed Nur Ur Rahman}\\\\
-Senior Manager, foodpanda Bangladesh\\\\
-\\faPhone\\ +8801751045011\\\\
-\\faEnvelope\\ \\href{mailto:syed.nur@foodpanda.com.bd}{syed.nur@foodpanda.com.bd}
-\\end{minipage}
-\\hfill
-\\begin{minipage}[t]{0.48\\textwidth}
-\\small
-\\textbf{Md. Anamul Hoque}\\\\
-Assistant Professor, East West University\\\\
-\\faPhone\\ +8801962265092\\\\
-\\faEnvelope\\ \\href{mailto:a.hoque@ewubd.edu}{a.hoque@ewubd.edu}
-\\end{minipage}
+${renderReferences(data)}
+
+${renderCustomSections(data, '\\section*')}
 
 \\end{document}`;
 }

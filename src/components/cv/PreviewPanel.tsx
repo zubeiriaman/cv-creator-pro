@@ -2,7 +2,6 @@ import { Download, FileText, Loader2, Zap } from 'lucide-react';
 
 interface PreviewPanelProps {
   isCompiling: boolean;
-  status: { type: 'idle' | 'compiling' | 'success' | 'error'; message: string };
   pdfUrl: string | null;
   onCompile: () => void;
   onDownloadPDF: () => void;
@@ -10,25 +9,12 @@ interface PreviewPanelProps {
 
 const PreviewPanel = ({
   isCompiling,
-  status,
   pdfUrl,
   onCompile,
   onDownloadPDF,
 }: PreviewPanelProps) => {
-  const statusColors = {
-    idle: 'text-muted-foreground',
-    compiling: 'text-warning',
-    success: 'text-success',
-    error: 'text-destructive',
-  };
-
   return (
     <div className="flex h-full flex-col">
-      {/* Status bar */}
-      <div className={`mb-3 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium ${statusColors[status.type]}`}>
-        {status.message}
-      </div>
-
       {/* Compile button */}
       <button
         onClick={onCompile}
@@ -36,7 +22,7 @@ const PreviewPanel = ({
         className="mb-3 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-3 text-sm font-bold text-primary-foreground transition-all hover:shadow-lg hover:shadow-primary/20 disabled:opacity-50"
       >
         {isCompiling ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-        {isCompiling ? 'Compiling...' : 'Generate & Compile PDF'}
+        {isCompiling ? 'Generating PDF...' : 'Generate PDF'}
       </button>
 
       {/* PDF Preview */}
@@ -52,8 +38,8 @@ const PreviewPanel = ({
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <div className="text-center">
               <FileText size={48} className="mx-auto mb-3 opacity-30" />
-              <p>PDF will appear here after compilation</p>
-              <p className="mt-1 text-xs opacity-60">Click "Generate & Compile PDF" to start</p>
+              <p className="text-sm">Your PDF preview will appear here</p>
+              <p className="mt-1 text-xs opacity-60">Click "Generate PDF" to get started</p>
             </div>
           </div>
         )}
