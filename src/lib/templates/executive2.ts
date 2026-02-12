@@ -1,8 +1,10 @@
 import { CVFormData } from '../cv-types';
-import { escapeLatex, bulletItems, renderCustomSections, renderReferences } from './utils';
+import { escapeLatex, isHidden, renderSectionContent, renderCustomSections, renderReferences, bulletItems } from './utils';
 
 export function executive2Template(data: CVFormData): string {
   const e = escapeLatex;
+  const h = (k: string) => isHidden(data, k);
+  const sc = (key: string, content: string, def: any[] = ['paragraph']) => renderSectionContent(data, key, content, def);
 
   return `\\documentclass[9pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
@@ -12,10 +14,12 @@ export function executive2Template(data: CVFormData): string {
 \\usepackage{titlesec}
 \\usepackage{xcolor}
 \\usepackage{fontawesome5}
+\\usepackage{graphicx}
 \\usepackage{tabularx}
 \\usepackage{ragged2e}
 \\usepackage{array}
 \\usepackage{multicol}
+\\usepackage{wrapfig}
 \\usepackage{parskip}
 
 % Colors
@@ -42,7 +46,7 @@ export function executive2Template(data: CVFormData): string {
 
 \\begin{document}
 
-% Header
+% Header with passport photo
 \\noindent
 \\begin{minipage}[c]{0.15\\textwidth}
     \\centering
@@ -63,97 +67,82 @@ export function executive2Template(data: CVFormData): string {
 
 \\vspace{4pt}
 
-% Summary
+${!h('summary') ? `% Summary
 \\section{${e(data.sectionHeadings.summary)}}
 {\\footnotesize\\color{textgray}
-\\textbf{${e(data.title)} --- ${e(data.subtitle)}.} ${e(data.summary)}
-}
+\\textbf{${e(data.title)} --- ${e(data.subtitle)}.} ${sc('summary', data.summary)}
+}` : ''}
 
-% Football / Sports
+${!h('football') ? `% Football / Sports
 \\section{${e(data.sectionHeadings.football)}}
 {\\footnotesize\\color{textgray}
-${e(data.football)}
-}
+${sc('football', data.football)}
+}` : ''}
 
-% Core Competencies
+${!h('skills') ? `% Core Competencies
 \\section{${e(data.sectionHeadings.skills)}}
 {\\footnotesize\\color{textgray}
-${e(data.skills)}
-}
+${sc('skills', data.skills, ['text'])}
+}` : ''}
 
-% Professional Experience
+${!h('experience') ? `% Professional Experience
 \\section{${e(data.sectionHeadings.experience)}}
 
 ${data.experience.map((exp, i) => {
-  if (i === 0) {
-    return `\\textbf{\\small ${e(exp.company)}} \\hfill {\\scriptsize\\color{headergray} \\textbf{${e(exp.startDate)} -- ${e(exp.endDate)}}}\\\\
+  return `${i > 0 ? '\\vspace{2pt}\n' : ''}\\textbf{\\small ${e(exp.company)}} \\hfill {\\scriptsize\\color{headergray} \\textbf{${e(exp.startDate)} -- ${e(exp.endDate)}}}\\\\
 \\textit{\\small ${e(exp.position)}}
 {\\footnotesize\\color{textgray}
 \\begin{itemize}
 ${exp.details.map(d => `    \\item ${e(d)}`).join('\n')}
 \\end{itemize}
 }`;
-  } else {
-    return `\\vspace{-2pt}
-\\textbf{\\small ${e(exp.company)}} \\hfill {\\scriptsize\\color{headergray} \\textbf{${e(exp.startDate)} -- ${e(exp.endDate)}}}\\\\
-\\textit{\\small ${e(exp.position)}}
-{\\footnotesize\\color{textgray}
-\\begin{itemize}
-${exp.details.map(d => `    \\item ${e(d)}`).join('\n')}
-\\end{itemize}
-}`;
-  }
-}).join('\n\n')}
+}).join('\n\n')}` : ''}
 
 % Education & Achievements
 \\vspace{-2pt}
 \\begin{multicols}{2}
 
-\\section{${e(data.sectionHeadings.education)}}
+${!h('education') ? `\\section{${e(data.sectionHeadings.education)}}
 ${data.education.map(edu => {
   return `\\textbf{\\small ${e(edu.degree)}} \\hfill {\\tiny\\color{headergray} \\textbf{${e(edu.startDate)}--${e(edu.endDate)}}}\\\\
 {\\footnotesize ${e(edu.institution)}}\\\\
 {\\footnotesize\\textit{Activities: ${e(edu.activities)}}}`;
-}).join('\n\n\\vspace{2pt}\n')}
+}).join('\n\n\\vspace{2pt}\n')}` : ''}
 
-\\section{${e(data.sectionHeadings.achievements)}}
+${!h('achievements') ? `\\section{${e(data.sectionHeadings.achievements)}}
 {\\footnotesize\\color{textgray}
-\\begin{itemize}
-${bulletItems(data.achievements)}
-\\end{itemize}
-}
+${sc('achievements', data.achievements, ['bullet'])}
+}` : ''}
 
 \\end{multicols}
 
-% Portfolio
+${!h('portfolio') ? `% Portfolio
 \\vspace{-4pt}
 \\section{${e(data.sectionHeadings.portfolio)}}
 {\\footnotesize\\color{textgray}
-\\begin{itemize}
-${bulletItems(data.portfolioContent)}
-\\end{itemize}
-}
+${sc('portfolio', data.portfolioContent, ['bullet', 'hyperlink'])}
+}` : ''}
 
-% Personal Attributes
+${!h('personalAttributes') ? `% Personal Attributes
 \\vspace{-2pt}
 \\section{${e(data.sectionHeadings.personalAttributes)}}
 {\\footnotesize\\color{textgray}
-${e(data.personalAttributes)}
-}
+${sc('personalAttributes', data.personalAttributes)}
+}` : ''}
 
-% Languages
+${!h('languages') ? `% Languages
 \\vspace{-2pt}
 \\section{${e(data.sectionHeadings.languages)}}
 {\\footnotesize\\color{textgray}
-${e(data.languages)}
-}
+${sc('languages', data.languages, ['text'])}
+}` : ''}
 
-% References
+${!h('references') ? `% References
 \\vspace{-2pt}
 \\section{${e(data.sectionHeadings.references)}}
 
 \\vspace{-2pt}
-${renderReferences(data)}
+${renderReferences(data)}` : ''}
 
 ${renderCustomSections(data, '\\section')}
 

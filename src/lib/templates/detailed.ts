@@ -1,8 +1,10 @@
 import { CVFormData } from '../cv-types';
-import { escapeLatex, bulletItems, renderCustomSections, renderReferences } from './utils';
+import { escapeLatex, isHidden, renderSectionContent, renderCustomSections, renderReferences } from './utils';
 
 export function detailedTemplate(data: CVFormData): string {
   const e = escapeLatex;
+  const h = (k: string) => isHidden(data, k);
+  const sc = (key: string, content: string, def: any[] = ['paragraph']) => renderSectionContent(data, key, content, def);
 
   const expBlocks = data.experience.map(exp => {
     return `\\subsection{${e(exp.position)}}
@@ -81,64 +83,60 @@ ${exp.details.map(d => `\\item ${e(d)}`).join('\n')}
 \\textbf{Location:} ${e(data.location)}
 }
 
-\\section{${e(data.sectionHeadings.summary)}}
+${!h('summary') ? `\\section{${e(data.sectionHeadings.summary)}}
 {\\small
-${e(data.summary)}
-}
+${sc('summary', data.summary)}
+}` : ''}
 
-\\section{${e(data.sectionHeadings.education)}}
+${!h('education') ? `\\section{${e(data.sectionHeadings.education)}}
 {\\small
 ${data.education.map(edu => {
   return `\\subsection{${e(edu.degree)}}
 ${e(edu.institution)} \\hfill ${e(edu.startDate)}--${e(edu.endDate)} \\\\[1pt]
 \\textit{${e(edu.activities)}}`;
 }).join('\n\n\\vspace{3pt}\n\n')}
-}
+}` : ''}
 
-\\section{${e(data.sectionHeadings.skills)}}
+${!h('skills') ? `\\section{${e(data.sectionHeadings.skills)}}
 {\\small
-${e(data.skills)}
-}
+${sc('skills', data.skills, ['text'])}
+}` : ''}
 
-\\section{${e(data.sectionHeadings.languages)}}
-{\\small ${e(data.languages)}}
+${!h('languages') ? `\\section{${e(data.sectionHeadings.languages)}}
+{\\small ${sc('languages', data.languages, ['text'])}}` : ''}
 
-\\section{${e(data.sectionHeadings.achievements)}}
+${!h('achievements') ? `\\section{${e(data.sectionHeadings.achievements)}}
 {\\small
-\\begin{itemize}
-${bulletItems(data.achievements)}
-\\end{itemize}
-}
+${sc('achievements', data.achievements, ['bullet'])}
+}` : ''}
 
-\\section{${e(data.sectionHeadings.experience)}}
+${!h('experience') ? `\\section{${e(data.sectionHeadings.experience)}}
 {\\small
 ${expBlocks}
-}
+}` : ''}
 
-\\section{${e(data.sectionHeadings.portfolio)}}
+${!h('portfolio') ? `\\section{${e(data.sectionHeadings.portfolio)}}
 {\\small
-\\begin{itemize}
-${bulletItems(data.portfolioContent)}
-\\end{itemize}
-}
+${sc('portfolio', data.portfolioContent, ['bullet', 'hyperlink'])}
+}` : ''}
 
 \\columnbreak
 
 % RIGHT COLUMN
-\\section{${e(data.sectionHeadings.football)}}
+${!h('football') ? `\\section{${e(data.sectionHeadings.football)}}
 {\\small
-${e(data.football)}
-}
+${sc('football', data.football)}
+}` : ''}
 
-\\section{${e(data.sectionHeadings.personalAttributes)}}
+${!h('personalAttributes') ? `\\section{${e(data.sectionHeadings.personalAttributes)}}
 {\\small
-${e(data.personalAttributes)}
-}
+${sc('personalAttributes', data.personalAttributes)}
+}` : ''}
 
-\\section{${e(data.sectionHeadings.references)}}
+${!h('references') ? `\\section{${e(data.sectionHeadings.references)}}
 {\\small
 ${renderReferences(data)}
-}
+}` : ''}
 
 ${renderCustomSections(data, '\\section')}
 

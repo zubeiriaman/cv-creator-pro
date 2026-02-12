@@ -78,7 +78,7 @@ const Index = () => {
           <CVForm data={formData} onChange={setFormData} />
         </div>
 
-        <div className="p-5" style={{ maxHeight: 'calc(100vh - 80px)', overflow: 'hidden' }}>
+        <div className="p-5" style={{ maxHeight: 'calc(100vh - 80px)', overflow: 'auto' }}>
           <PreviewPanel
             isCompiling={isCompiling}
             pdfUrl={pdfUrl}
