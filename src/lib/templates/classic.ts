@@ -1,8 +1,10 @@
 import { CVFormData } from '../cv-types';
-import { escapeLatex, bulletItems, renderCustomSections, renderReferences } from './utils';
+import { escapeLatex, isHidden, renderSectionContent, renderCustomSections, renderReferences } from './utils';
 
 export function classicTemplate(data: CVFormData): string {
   const e = escapeLatex;
+  const h = (k: string) => isHidden(data, k);
+  const sc = (key: string, content: string, def: any[] = ['paragraph']) => renderSectionContent(data, key, content, def);
 
   const expBlocks = data.experience.map(exp => {
     return `\\textbf{${e(exp.company)}} \\hfill \\textbf{${e(exp.startDate)} -- ${e(exp.endDate)}}\\\\
@@ -52,52 +54,48 @@ ${e(edu.institution)}\\\\
 
 \\vspace{-2pt}
 
-% Professional Summary
+${!h('summary') ? `% Summary
 \\section*{\\faUser\\ ${e(data.sectionHeadings.summary)}}
-${e(data.summary)}
+${sc('summary', data.summary)}` : ''}
 
-% Football / Sports
+${!h('football') ? `% Sports
 \\section*{\\faFutbol\\ ${e(data.sectionHeadings.football)}}
-${e(data.football)}
+${sc('football', data.football)}` : ''}
 
-% Core Competencies
+${!h('skills') ? `% Skills
 \\section*{\\faTools\\ ${e(data.sectionHeadings.skills)}}
-${e(data.skills)}
+${sc('skills', data.skills, ['text'])}` : ''}
 
-% Experience
+${!h('experience') ? `% Experience
 \\section*{\\faBriefcase\\ ${e(data.sectionHeadings.experience)}}
 
-${expBlocks}
+${expBlocks}` : ''}
 
-% Education
+${!h('education') ? `% Education
 \\section*{\\faGraduationCap\\ ${e(data.sectionHeadings.education)}}
 
-${eduBlocks}
+${eduBlocks}` : ''}
 
-% Achievements
+${!h('achievements') ? `% Achievements
 \\section*{\\faStar\\ ${e(data.sectionHeadings.achievements)}}
-\\begin{itemize}
-${bulletItems(data.achievements)}
-\\end{itemize}
+${sc('achievements', data.achievements, ['bullet'])}` : ''}
 
-% Portfolio
+${!h('portfolio') ? `% Portfolio
 \\section*{\\faAddressBook\\ ${e(data.sectionHeadings.portfolio)}}
-\\begin{itemize}
-${bulletItems(data.portfolioContent)}
-\\end{itemize}
+${sc('portfolio', data.portfolioContent, ['bullet', 'hyperlink'])}` : ''}
 
-% Personal Attributes
+${!h('personalAttributes') ? `% Personal Attributes
 \\section*{\\faUserCircle\\ ${e(data.sectionHeadings.personalAttributes)}}
-${e(data.personalAttributes)}
+${sc('personalAttributes', data.personalAttributes)}` : ''}
 
-% Languages
+${!h('languages') ? `% Languages
 \\section*{\\faLanguage\\ ${e(data.sectionHeadings.languages)}}
-${e(data.languages)}
+${sc('languages', data.languages, ['text'])}` : ''}
 
-% References
+${!h('references') ? `% References
 \\section*{\\faAddressCard\\ ${e(data.sectionHeadings.references)}}
 
-${renderReferences(data)}
+${renderReferences(data)}` : ''}
 
 ${renderCustomSections(data, '\\section*')}
 

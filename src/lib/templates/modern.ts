@@ -1,8 +1,10 @@
 import { CVFormData } from '../cv-types';
-import { escapeLatex, bulletItems, renderCustomSections, renderReferences } from './utils';
+import { escapeLatex, isHidden, renderSectionContent, renderCustomSections, renderReferences } from './utils';
 
 export function modernTemplate(data: CVFormData): string {
   const e = escapeLatex;
+  const h = (k: string) => isHidden(data, k);
+  const sc = (key: string, content: string, def: any[] = ['paragraph']) => renderSectionContent(data, key, content, def);
 
   const expBlocks = data.experience.map(exp => {
     return `\\jobtitle{${e(exp.position)}}{${e(exp.startDate)} -- ${e(exp.endDate)}}{${e(exp.company)}}
@@ -10,6 +12,16 @@ export function modernTemplate(data: CVFormData): string {
 ${exp.details.map(d => `    \\item ${e(d)}`).join('\n')}
 \\end{itemize}`;
   }).join('\n\n\\vspace{0.4cm}\n\n');
+
+  // Achievements as tcolorbox items
+  const achievementBoxes = data.achievements
+    .split('\n')
+    .map(a => a.trim().replace(/^•\s*/, ''))
+    .filter(Boolean)
+    .map(a => `\\begin{tcolorbox}[colback=white, colframe=primaryblue, arc=0mm, leftrule=3pt, rightrule=0pt, toprule=0pt, bottomrule=0pt, boxsep=1pt]
+\\small ${e(a)}
+\\end{tcolorbox}`)
+    .join('\n\n');
 
   return `\\documentclass[10pt,a4paper]{article}
 
@@ -77,43 +89,45 @@ ${exp.details.map(d => `    \\item ${e(d)}`).join('\n')}
 \\columnseprule=0pt
 
 % --- LEFT COLUMN ---
-\\section{\\texorpdfstring{\\faUser}{Summary} ${e(data.sectionHeadings.summary)}}
-${e(data.summary)}
+${!h('summary') ? `\\section{\\texorpdfstring{\\faUser}{Summary} ${e(data.sectionHeadings.summary)}}
+${sc('summary', data.summary)}` : ''}
 
-\\section{\\texorpdfstring{\\faBriefcase}{Experience} ${e(data.sectionHeadings.experience)}}
+${!h('experience') ? `\\section{\\texorpdfstring{\\faBriefcase}{Experience} ${e(data.sectionHeadings.experience)}}
 
-${expBlocks}
+${expBlocks}` : ''}
 
-\\section{\\texorpdfstring{\\faFutbol}{Sports} ${e(data.sectionHeadings.football)}}
-${e(data.football)}
+${!h('football') ? `\\section{\\texorpdfstring{\\faFutbol}{Sports} ${e(data.sectionHeadings.football)}}
+${sc('football', data.football)}` : ''}
 
 \\vfill\\null \\columnbreak % Switch to right column
 
 % --- RIGHT COLUMN ---
-\\section{\\texorpdfstring{\\faStar}{Achievements} ${e(data.sectionHeadings.achievements)}}
-\\begin{itemize}[leftmargin=*, noitemsep]
-${bulletItems(data.achievements)}
-\\end{itemize}
+${!h('achievements') ? `\\section{\\texorpdfstring{\\faStar}{Achievements} ${e(data.sectionHeadings.achievements)}}
 
-\\section{\\texorpdfstring{\\faTools}{Skills} ${e(data.sectionHeadings.skills)}}
-${e(data.skills)}
+${achievementBoxes}` : ''}
 
-\\section{\\texorpdfstring{\\faGraduationCap}{Education} ${e(data.sectionHeadings.education)}}
+${!h('skills') ? `\\section{\\texorpdfstring{\\faTools}{Skills} ${e(data.sectionHeadings.skills)}}
+${sc('skills', data.skills, ['text'])}` : ''}
+
+${!h('education') ? `\\section{\\texorpdfstring{\\faGraduationCap}{Education} ${e(data.sectionHeadings.education)}}
 ${data.education.map(edu => {
   return `\\textbf{${e(edu.degree)}} \\\\
 \\textit{${e(edu.startDate)}--${e(edu.endDate)}} \\\\
 ${e(edu.institution)}`;
-}).join('\n\n\\vspace{0.2cm}\n')}
+}).join('\n\n\\vspace{0.2cm}\n')}` : ''}
 
-\\section{\\texorpdfstring{\\faUserCircle}{Attributes} ${e(data.sectionHeadings.personalAttributes)}}
-${e(data.personalAttributes)}
+${!h('personalAttributes') ? `\\section{\\texorpdfstring{\\faUserCircle}{Attributes} ${e(data.sectionHeadings.personalAttributes)}}
+${sc('personalAttributes', data.personalAttributes)}` : ''}
 
-\\section{\\texorpdfstring{\\faAddressCard}{References} ${e(data.sectionHeadings.references)}}
+${!h('portfolio') ? `\\section{\\texorpdfstring{\\faAddressBook}{Portfolio} ${e(data.sectionHeadings.portfolio)}}
+${sc('portfolio', data.portfolioContent, ['bullet', 'hyperlink'])}` : ''}
+
+${!h('languages') ? `\\section{\\texorpdfstring{\\faLanguage}{Languages} ${e(data.sectionHeadings.languages)}}
+${sc('languages', data.languages, ['text'])}` : ''}
+
+${!h('references') ? `\\section{\\texorpdfstring{\\faAddressCard}{References} ${e(data.sectionHeadings.references)}}
 \\small
-${renderReferences(data)}
-
-\\section{\\texorpdfstring{\\faLanguage}{Languages} ${e(data.sectionHeadings.languages)}}
-${e(data.languages)}
+${renderReferences(data)}` : ''}
 
 ${renderCustomSections(data, '\\section')}
 

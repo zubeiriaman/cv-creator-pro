@@ -1,3 +1,10 @@
+export type FieldType = 'paragraph' | 'bullet' | 'hyperlink' | 'structured' | 'text' | 'references';
+
+export interface LinkEntry {
+  label: string;
+  url: string;
+}
+
 export interface ExperienceEntry {
   position: string;
   company: string;
@@ -17,6 +24,8 @@ export interface EducationEntry {
 export interface CustomSection {
   heading: string;
   content: string;
+  fieldTypes: FieldType[];
+  links: LinkEntry[];
 }
 
 export interface CVFormData {
@@ -39,6 +48,9 @@ export interface CVFormData {
   experience: ExperienceEntry[];
   education: EducationEntry[];
   customSections: CustomSection[];
+  hiddenSections: string[];
+  sectionFieldTypes: Record<string, FieldType[]>;
+  sectionLinks: Record<string, LinkEntry[]>;
   sectionHeadings: {
     personalInfo: string;
     summary: string;
@@ -65,12 +77,12 @@ export const defaultFormData: CVFormData = {
   location: 'London, UK',
   portfolio: 'behance.net/jamesrichardson',
   social: 'linkedin.com/in/jamesrichardson',
-  summary: 'Results-driven Marketing Manager with 8+ years of experience in digital strategy, brand communications, and campaign management. Proven track record in growing engagement across social media platforms by 150%. Skilled in content creation, analytics, SEO, and cross-functional team leadership. Passionate about innovative storytelling and data-driven decision making.',
+  summary: 'Results-driven Marketing Manager with 8+ years of experience in digital strategy, brand communications, and campaign management. Proven track record in growing engagement across social media platforms by 150%. Skilled in content creation, analytics, SEO, and cross-functional team leadership.',
   football: 'Organised annual charity football tournament raising £5,000+ for local youth programmes. Active member of the London Corporate Football League.',
   achievements: '• Increased brand social media following by 200% in 12 months\n• Led rebranding campaign resulting in 35% uplift in customer engagement\n• Won "Best Digital Campaign" at the UK Marketing Awards 2024\n• Managed £500K+ annual marketing budget',
   skills: 'Content Strategy, Social Media Management, SEO & SEM, Brand Communications, Data Analytics, Campaign Management, Team Leadership, CRM Tools',
-  portfolioContent: '• Digital Campaigns: portfolio.example.com/campaigns\n• Design Work: behance.net/jamesrichardson\n• Writing Samples: Available upon request\n• Case Studies: Detailed ROI reports available',
-  personalAttributes: 'Creative and detail-oriented professional with strong communication skills. Thrives in fast-paced environments. Proven ability to lead cross-functional teams and deliver projects on time. Flexible and adaptable to changing priorities.',
+  portfolioContent: '• Design Work: Available on portfolio site\n• Writing Samples: Available upon request\n• Case Studies: Detailed ROI reports available',
+  personalAttributes: 'Creative and detail-oriented professional with strong communication skills. Thrives in fast-paced environments. Proven ability to lead cross-functional teams and deliver projects on time.',
   languages: 'English (Native), French (Conversational), Spanish (Basic)',
   references: 'Sarah Thompson\nHead of Marketing, Acme Corp\nPhone: +44 7700 900456\nEmail: s.thompson@acme.example.com\n\nDr. Michael Chen\nSenior Lecturer, University of London\nPhone: +44 7700 900789\nEmail: m.chen@uol.example.com',
   experience: [
@@ -115,6 +127,24 @@ export const defaultFormData: CVFormData = {
     },
   ],
   customSections: [],
+  hiddenSections: [],
+  sectionFieldTypes: {
+    summary: ['paragraph'],
+    experience: ['structured', 'bullet'],
+    education: ['structured'],
+    football: ['paragraph'],
+    achievements: ['bullet'],
+    skills: ['text'],
+    portfolio: ['bullet', 'hyperlink'],
+    personalAttributes: ['paragraph'],
+    languages: ['text'],
+    references: ['references'],
+  },
+  sectionLinks: {
+    portfolio: [
+      { label: 'Design Work', url: 'https://behance.net/jamesrichardson' },
+    ],
+  },
   sectionHeadings: {
     personalInfo: 'Personal Information',
     summary: 'Professional Summary',
