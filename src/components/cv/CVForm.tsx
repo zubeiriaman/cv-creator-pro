@@ -1,5 +1,6 @@
+import { useRef } from 'react';
 import { CVFormData, ExperienceEntry, EducationEntry, CustomSection, FieldType, LinkEntry } from '@/lib/cv-types';
-import { Plus, X, Type, List, Link, FileText, Users, EyeOff, RotateCcw } from 'lucide-react';
+import { Plus, X, Type, List, Link, FileText, Users, EyeOff, RotateCcw, Camera, Trash2 } from 'lucide-react';
 
 interface CVFormProps {
   data: CVFormData;
@@ -29,6 +30,49 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 );
 
 type HeadingKey = keyof CVFormData['sectionHeadings'];
+
+const PhotoUpload = ({ data, onChange }: CVFormProps) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      onChange({ ...data, photoBase64: base64 });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removePhoto = () => onChange({ ...data, photoBase64: null });
+
+  return (
+    <div className="mb-3">
+      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+        Passport Photo <span className="text-[10px] italic">(used in Executive V1 & V2)</span>
+      </label>
+      {data.photoBase64 ? (
+        <div className="flex items-center gap-3">
+          <img
+            src={`data:image/jpeg;base64,${data.photoBase64}`}
+            alt="Passport"
+            className="h-16 w-12 rounded border border-border object-cover"
+          />
+          <button type="button" onClick={removePhoto} className="flex items-center gap-1 rounded-md bg-destructive/20 px-2 py-1 text-xs text-destructive hover:bg-destructive/30 transition-colors">
+            <Trash2 size={12} /> Remove
+          </button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => fileRef.current?.click()}
+          className="flex items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+          <Camera size={14} /> Upload Photo
+        </button>
+      )}
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  );
+};
 
 const CVForm = ({ data, onChange }: CVFormProps) => {
   const set = <K extends keyof CVFormData>(key: K, value: CVFormData[K]) =>
@@ -198,6 +242,10 @@ const CVForm = ({ data, onChange }: CVFormProps) => {
           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${ftConfig.text.active}`}>{ftConfig.text.icon} Text</span>
           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${ftConfig.hyperlink.active}`}>{ftConfig.hyperlink.icon} Hyperlinks</span>
         </div>
+
+        {/* Passport Photo Upload */}
+        <PhotoUpload data={data} onChange={onChange} />
+
         <div className="grid grid-cols-2 gap-3">
           <Field label="Full Name *"><input className={inputClass} value={data.name} onChange={e => set('name', e.target.value)} /></Field>
           <Field label="Job Title *"><input className={inputClass} value={data.title} onChange={e => set('title', e.target.value)} /></Field>
