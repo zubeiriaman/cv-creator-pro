@@ -18,12 +18,17 @@ const Index = () => {
     try {
       const code = generateLatex(template, formData);
 
+      const resources: any[] = [{ main: true, content: code }];
+      if (formData.photoBase64) {
+        resources.push({ path: 'photo.jpg', file: formData.photoBase64 });
+      }
+
       const response = await fetch('https://latex.ytotech.com/builds/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           compiler: 'pdflatex',
-          resources: [{ main: true, content: code }],
+          resources,
         }),
       });
 
