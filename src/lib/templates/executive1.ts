@@ -83,13 +83,11 @@ ${exp.details.map(d => `  \\item ${e(d)}`).join('\n')}
 \\begin{minipage}[t]{0.28\\textwidth}
   \\vspace{-6mm}
   \\begin{center}
-    ${data.photoBase64
-      ? `\\includegraphics[width=3.5cm,height=4.5cm,keepaspectratio]{photo.jpg}`
-      : `\\begin{tikzpicture}
+    \\begin{tikzpicture}
       \\node[draw=chelseabluelight, line width=1.8pt, minimum width=3.5cm, minimum height=4.5cm,
             fill=lightgray, text=darkgray, align=center, font=\\footnotesize\\itshape,
-            inner sep=4pt] (photo) {Passport\\\\photo\\\\35 \\times 45 mm};
-    \\end{tikzpicture}`}
+            inner sep=4pt] (photo) {Passport\\\\photo\\\\35 × 45 mm};
+    \\end{tikzpicture}
   \\end{center}
 \\end{minipage}
 

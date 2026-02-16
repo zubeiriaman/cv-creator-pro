@@ -50,9 +50,7 @@ export function executive2Template(data: CVFormData): string {
 \\noindent
 \\begin{minipage}[c]{0.15\\textwidth}
     \\centering
-    ${data.photoBase64
-      ? `\\includegraphics[width=2.5cm,height=3.2cm,keepaspectratio]{photo.jpg}`
-      : `\\fbox{\\rule{2.5cm}{3.2cm}}`}\\\\
+    \\fbox{\\rule{2.5cm}{3.2cm}}\\\\
     \\vspace{2pt}
     
 \\end{minipage}%

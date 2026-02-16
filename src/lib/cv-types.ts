@@ -31,7 +31,6 @@ export interface CustomSection {
 export interface CVFormData {
   name: string;
   title: string;
-  photoBase64: string | null;
   subtitle: string;
   phone: string;
   email: string;
@@ -72,7 +71,6 @@ export type TemplateName = 'classic' | 'modern' | 'detailed' | 'executive1' | 'e
 export const defaultFormData: CVFormData = {
   name: 'James Richardson',
   title: 'Marketing Manager',
-  photoBase64: null,
   subtitle: 'Digital Strategy & Brand Communications',
   phone: '+44 7700 900123',
   email: 'james.richardson@example.com',
